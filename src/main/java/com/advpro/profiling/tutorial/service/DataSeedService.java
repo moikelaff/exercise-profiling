@@ -28,7 +28,7 @@ public class DataSeedService {
     @Autowired
     private StudentCourseRepository studentCourseRepository;
 
-    private static final int NUMBER_OF_STUDENTS = 20_000;
+    private static final int NUMBER_OF_STUDENTS = 5_000;
     private static final int NUMBER_OF_COURSE = 10;
 
     public void seedStudent() {
@@ -61,19 +61,29 @@ public class DataSeedService {
         List<Student> students = studentRepository.findAll();
         List<Course> courses = courseRepository.findAll();
 
-        for (Student student : students) {
-            List<Course> selectedCourses = new Random().ints(0, courses.size())
-                    .distinct()
-                    .limit(2)
-                    .mapToObj(courses::get)
-                    .collect(Collectors.toList());
+        if (courses.isEmpty()) {
+            System.err.println("No courses available to assign to students.");
+            return;
+        }
+        Random random = new Random();
 
-            for (Course course : selectedCourses) {
-                StudentCourse studentCourse = new StudentCourse(student, course);
-                studentCourseRepository.save(studentCourse);
+        for (Student student : students) {
+            // Ensure the bound is greater than the origin
+            int bound = courses.size();
+            if (bound > 0) {
+                List<Course> selectedCourses = random.ints(0, bound)
+                        .distinct()
+                        .limit(2)
+                        .mapToObj(courses::get)
+                        .collect(Collectors.toList());
+
+                for (Course course : selectedCourses) {
+                    StudentCourse studentCourse = new StudentCourse(student, course);
+                    studentCourseRepository.save(studentCourse);
+                }
+            } else {
+                System.err.println("No courses available to assign to student: " + student.getName());
             }
         }
-
     }
-
 }
